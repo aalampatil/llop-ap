@@ -91,3 +91,28 @@ responses.id < question_responses.response_id
 // one question answered across many question_responses (zero or many)
 questions.id < question_responses.question_id
 ```
+
+User creates poll
+│
+▼
+status = "draft"
+│
+│ Add questions + options freely
+│ Edit / delete / reorder
+│
+▼
+status = "active" ←── creator hits "Go Live"
+│ shareable link is now valid
+│
+│ Respondents submit answers
+│
+├──── expiresAt passes ──────────► status = "expired"
+│ │
+│ │ no more submissions
+│ ▼
+│ creator reviews analytics
+│ │
+└───────────────────────────────────────▼
+status = "published"
+public can see results
+via same poll link
