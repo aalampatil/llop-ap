@@ -4,13 +4,22 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "dev": "bun --watch run src/index.ts"
+    "dev": "bun --watch src/index.ts",
+    "build": "tsc",
+    "start": "bun run src/index.ts",
+    "db:migrate": "drizzle-kit migrate",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate:prod": "dotenv -e .env.production drizzle-kit migrate",
+    "db:studio": "drizzle-kit studio"
   },
   "devDependencies": {
     "@types/bun": "latest",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
-    "dotenv-cli": "^11.0.0"
+    "@types/pg": "^8.20.0",
+    "dotenv-cli": "^11.0.0",
+    "drizzle-kit": "^0.31.10",
+    "tsx": "^4.21.0"
   },
   "peerDependencies": {
     "typescript": "^5"
@@ -19,7 +28,10 @@
     "@clerk/express": "^2.1.15",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
+    "drizzle-orm": "^0.45.2",
     "express": "5",
-    "socket.io": "^4.8.3"
+    "pg": "^8.20.0",
+    "socket.io": "^4.8.3",
+    "zod": "^4.4.3"
   }
 }
