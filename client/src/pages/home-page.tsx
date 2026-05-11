@@ -88,17 +88,17 @@ export function HomePage() {
           <div>
             <div className="hp-badge">
               <span className="hp-badge-dot" />
-              Decision intelligence · Live workspace
+              Live polls · Clear results
             </div>
 
             <h1 className="hp-title">
-              Launch polls like a{" "}
-              <span className="hp-title-accent">command center.</span>
+              Create polls that{" "}
+              <span className="hp-title-accent">get answers fast.</span>
             </h1>
 
             <p className="hp-subtitle">
-              Create high-signal polls, enforce clean participation,<br />
-              and publish boardroom-ready outcomes — all in one place.
+              Build, share, and track polls with live results,<br />
+              response controls, and simple publishing.
             </p>
 
             <div className="hp-btn-row">
@@ -141,8 +141,8 @@ export function HomePage() {
           <div className="hp-card">
             <div className="hp-card-header">
               <div>
-                <p className="hp-card-label">Live operations</p>
-                <p className="hp-card-title">Poll Intelligence</p>
+                <p className="hp-card-label">Live overview</p>
+                <p className="hp-card-title">Poll Analytics</p>
               </div>
               <div className="hp-card-icon">
                 <Activity size={18} />
@@ -187,7 +187,7 @@ export function HomePage() {
               </p>
               <h2 className="hp-section-title">Creator workspace</h2>
               <p className="hp-section-sub">
-                Ship · Share · Monitor · Publish — without leaving this screen.
+                Create, share, review, and publish your polls from one place.
               </p>
             </div>
             <SignedInView>

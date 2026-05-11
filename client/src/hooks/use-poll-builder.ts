@@ -34,7 +34,7 @@ export function usePollBuilder() {
   const navigate = useNavigate();
   const [form, setForm] = useState<PollBuilderState>({
     title: "Customer Pulse Sprint",
-    description: "Help us choose the sharpest next move.",
+    description: "Help us choose the next priority.",
     category: "Product",
     tags: "hackathon, launch, feedback",
     accentColor: "#B6FF3B",
@@ -42,7 +42,7 @@ export function usePollBuilder() {
     isAnonymous: true,
     showLiveResults: false,
     completionMessage:
-      "Your response is locked in. Thanks for helping shape the result.",
+      "Your response has been recorded. Thanks for sharing your input.",
     questions: initialQuestions,
   });
   const [error, setError] = useState("");

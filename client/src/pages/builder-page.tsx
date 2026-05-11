@@ -25,7 +25,7 @@ export function BuilderPage() {
         <div className="db-page-head">
           <div>
             <h1 className="db-title">Build poll</h1>
-            <p className="db-desc">Create a cyberpunk-styled poll with reusable global UI primitives.</p>
+            <p className="db-desc">Set up questions, response rules, and sharing options for your poll.</p>
           </div>
           <div className="db-head-actions">
             <button className="neo-button bg-black text-main" onClick={addQuestion} type="button">
