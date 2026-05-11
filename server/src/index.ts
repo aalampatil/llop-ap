@@ -1,21 +1,38 @@
-console.log("Hello from Bun!");
 import { createServer } from "node:http";
 import express from "express";
 import cors from "cors";
 import { Server } from "socket.io";
-import { webhookRouter } from "./modules/webhook/webhook.routes";
+import { clerkMiddleware } from "@clerk/express";
 import { userRouter } from "./modules/user/user.routes";
-import { questionRouter } from "./modules/question/question.routes";
 import { pollRouter } from "./modules/poll/poll.routes";
+import { registerSocketHandlers } from "./socket";
+import { env } from "./env";
+import { initIO } from "./lib/socket";
+import { errorHandler } from "./lib/http";
+
+const app = express();
+const server = createServer(app);
+
+// ── Export io so controllers can use getIO() ──────────────
+const io = new Server(server, {
+  cors: { origin: env.CLIENT },
+});
+
+initIO(io);
 
 async function main() {
-  const app = express();
-  const port = 3000;
-  const io = new Server();
-  const server = createServer(app);
+  const port = Number(env.PORT || 3000);
+  registerSocketHandlers(io);
 
-  io.attach(server);
-  app.use(cors());
+  app.use(
+    cors({
+      origin: env.CLIENT,
+      credentials: true,
+    }),
+  );
+  app.use(clerkMiddleware());
+  app.use(express.json());
+  app.use(express.urlencoded({ extended: true }));
 
   app.get("/health", (req, res) => {
     return res.send("I'm up and running");
@@ -24,10 +41,9 @@ async function main() {
     return res.send("LLOP-aP");
   });
 
-  app.use("/api/webhook/", webhookRouter);
   app.use("/api/user", userRouter);
-  app.use("/api/question", questionRouter);
   app.use("/api/poll", pollRouter);
+  app.use(errorHandler);
 
   server.listen(port, () => {
     console.log(`server is listening on http://localhost:${port}`);

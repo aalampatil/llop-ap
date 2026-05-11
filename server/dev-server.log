@@ -1,0 +1,2 @@
+$ tsx watch src/index.ts
+server is listening on http://localhost:3000

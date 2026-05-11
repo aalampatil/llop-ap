@@ -116,3 +116,153 @@ status = "active" ←── creator hits "Go Live"
 status = "published"
 public can see results
 via same poll link
+
+---
+
+```JS
+Who Joins the Poll Room and When
+Creator opens analytics dashboard
+        │
+        ▼
+socket.emit("poll:join", { pollId })   ← watches live stats
+
+Respondent opens public poll link
+        │
+        ▼
+socket.emit("poll:join", { pollId })   ← same room, different reason
+Both join the same poll:${pollId} room. But only the creator cares about the poll:stats:updated event — the respondent is there just to submit answers via REST.
+
+So Do You Even Need Respondent in the Room?
+No. Think about it:
+
+Respondent opens poll link → fills the form → hits submit → POST /api/polls/:id/respond
+That's pure REST. No socket needed from the respondent's side at all.
+The socket emit after insert goes to the creator's dashboard, not back to the respondent.
+
+Respondent                Creator Dashboard
+    │                           │
+    │  POST /respond (REST)     │  socket.emit("poll:join")
+    │ ─────────────────────►    │  ← already listening
+    │                           │
+    │                    DB insert happens
+    │                           │
+    │                    io.to(`poll:${pollId}`)
+    │                    .emit("poll:stats:updated")
+    │                           │
+    │                           ▼
+    │                    stats update on screen
+
+Verdict
+WhoNeeds to join socket room?WhyCreator on dashboard✅ YesReceives live stats updatesRespondent on poll form❌ NoOnly does REST submit, needs no live data
+So only emit poll:join on the creator's analytics dashboard page, not on the public poll form page. Keep the respondent flow pure REST — simpler and cleaner.
+```
+
+---
+
+```JS
+Two Different Pages
+/poll/:id              ← public page, respondent fills and submits
+/dashboard/poll/:id    ← creator's page, sees live stats
+
+Respondent Flow (pure REST, no socket)
+Respondent opens /poll/:id
+        │
+        ▼
+Sees the form, fills answers
+        │
+        ▼
+Clicks Submit
+        │
+        ▼
+POST /api/polls/:id/respond    ← just a normal API call
+        │
+        ▼
+Done. Redirected to "Thanks for submitting!"
+The respondent never touches a socket. They just fill a form and hit an API endpoint. That's it.
+
+Creator Flow (socket involved)
+Creator opens /dashboard/poll/:id
+        │
+        ▼
+Page loads → socket.emit("poll:join", { pollId })
+        │         ← tells server "I want live updates for this poll"
+        ▼
+Creator sits and watches the dashboard
+        │
+        ▼
+Meanwhile... a respondent submits via REST
+        │
+        ▼
+Server inserts into DB
+        │
+        ▼
+Server emits to poll room:
+io.to("poll:pollId").emit("poll:stats:updated", { totalResponses: 5 })
+        │
+        ▼
+Creator's dashboard receives it → numbers update live
+
+The Connection Between Both
+Respondent                 Your Server              Creator Dashboard
+    │                           │                           │
+    │  POST /api/polls/:id/respond                          │
+    │ ─────────────────────────►│                           │
+    │                           │ insert into DB            │
+    │                           │ calculate new counts      │
+    │                           │ io.to(pollId).emit() ────►│
+    │                           │                           │ updates live
+    │  201 OK                   │                           │
+    │ ◄─────────────────────────│                           │
+The respondent's REST call triggers the socket emit, but the respondent themselves never receives or sends any socket event. The socket message goes only to the creator's open dashboard tab.
+
+One Line Summary
+
+Respondent submits via REST → server emits to socket room → creator's dashboard updates live.
+
+The respondent is the cause, the creator's dashboard is the receiver. They never directly talk to each other.
+```
+
+---
+
+```JS
+Creator dashboard loads
+        │
+        ▼
+Every 3 seconds:
+GET /api/polls/:id/stats  ← keeps hitting server repeatedly
+GET /api/polls/:id/stats
+GET /api/polls/:id/stats
+        │
+        ▼
+Wasteful — most requests return same data
+Adds unnecessary DB load
+Feels delayed (up to 3s lag)
+```
+
+---
+
+```JS
+With Socket (what you're building — good)
+Creator dashboard loads
+        │
+        ▼
+socket.emit("poll:join", { pollId })  ← one time, on page load
+        │
+        ▼
+Creator just sits and waits
+        │
+        │   ... respondent submits somewhere in the world ...
+        │
+        ▼
+Server: new row inserted into DB
+        │
+        ▼
+Server: io.to(`poll:${pollId}`).emit("poll:stats:updated", {
+          totalResponses: 6,
+          optionCounts: [...]
+        })
+        │
+        ▼
+Creator's dashboard receives it instantly
+Numbers update on screen — no request made
+```

@@ -25,14 +25,6 @@ export const questionTypeEnum = pgEnum("question_type", [
   "image_choice",
 ]);
 
-// ─── JSONB Types ──────────────────────────────────────────────────────────────
-
-export type QuestionOption = {
-  id: string;
-  label: string;
-  imageUrl: string | null;
-};
-
 // ─── Users ────────────────────────────────────────────────────────────────────
 
 export const usersTable = pgTable("users", {
@@ -56,10 +48,18 @@ export const pollsTable = pgTable(
     createdBy: uuid("created_by")
       .references(() => usersTable.id, { onDelete: "cascade" })
       .notNull(),
+    slug: varchar("slug", { length: 120 }).notNull(),
     title: varchar("title", { length: 255 }).notNull(),
     description: text("description"),
+    category: varchar("category", { length: 120 }).default("general").notNull(),
+    tags: text("tags").default("[]").notNull(), // JSON string -> string[]
+    accentColor: varchar("accent_color", { length: 40 }).default("#B6FF3B").notNull(),
+    completionMessage: text("completion_message")
+      .default("Your response has been recorded. Thanks for weighing in.")
+      .notNull(),
     status: pollStatusEnum("status").default("draft").notNull(),
     isAnonymous: boolean("is_anonymous").default(false).notNull(),
+    showLiveResults: boolean("show_live_results").default(false).notNull(),
     expiresAt: timestamp("expires_at"),
     publishedAt: timestamp("published_at"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -71,8 +71,17 @@ export const pollsTable = pgTable(
   (table) => ({
     createdByIdx: index("polls_created_by_idx").on(table.createdBy),
     statusIdx: index("polls_status_idx").on(table.status),
+    slugIdx: uniqueIndex("polls_slug_idx").on(table.slug),
   }),
 );
+
+// ─── JSONB Types ──────────────────────────────────────────────────────────────
+
+export type QuestionOption = {
+  id: string;
+  label: string;
+  imageUrl: string | null;
+};
 
 // ─── Questions ────────────────────────────────────────────────────────────────
 
@@ -109,7 +118,10 @@ export const responsesTable = pgTable(
     userId: uuid("user_id").references(() => usersTable.id, {
       onDelete: "set null",
     }),
+    respondentName: varchar("respondent_name", { length: 255 }),
+    respondentEmail: varchar("respondent_email", { length: 255 }),
     submissionToken: varchar("submission_token", { length: 255 }).unique(),
+    userAgent: text("user_agent"),
     submittedAt: timestamp("submitted_at").defaultNow().notNull(),
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
