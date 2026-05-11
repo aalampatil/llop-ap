@@ -397,6 +397,106 @@ Wait for analytics:update events
 Update Zustand store and render new stats
 ```
 
+## Anonymous Response Logic
+
+Poll anonymity is controlled by the `polls.is_anonymous` database field.
+
+When `isAnonymous` is `true`:
+
+- The public poll can be opened and submitted without Clerk sign-in.
+- The submitted response stores `user_id` as `null`.
+- The respondent can optionally provide `respondent_name` and `respondent_email`.
+- Duplicate protection relies on a `submission_token`.
+- Analytics counts the response as anonymous.
+
+When `isAnonymous` is `false`:
+
+- The public poll requires Clerk authentication before submission.
+- The submitted response stores the local application `user_id`.
+- The respondent name and email come from the authenticated Clerk-backed user record.
+- Duplicate protection relies on the unique `poll_id + user_id` rule.
+- Analytics counts the response as authenticated.
+
+Public poll loading:
+
+```txt
+GET /api/poll/public/:slug
+        |
+        v
+Server loads poll by slug
+        |
+        v
+Server returns authRequired = !poll.isAnonymous
+        |
+        v
+Frontend either shows the response form or asks the user to sign in
+```
+
+Response submit auth check:
+
+```txt
+POST /api/poll/public/:slug/submit
+        |
+        v
+Server checks current Clerk session
+        |
+        v
+If poll is not anonymous and there is no session user:
+return 401 "Sign in to answer this poll"
+        |
+        v
+If poll is anonymous:
+allow submission without session user
+```
+
+Anonymous response storage:
+
+```txt
+responses.user_id = null
+responses.respondent_name = optional name from request body
+responses.respondent_email = optional email from request body
+responses.submission_token = browser/client token
+```
+
+Authenticated response storage:
+
+```txt
+responses.user_id = current app user id
+responses.respondent_name = current app user name
+responses.respondent_email = current app user email
+responses.submission_token = request token or generated fallback
+```
+
+Duplicate response protection:
+
+```txt
+Authenticated poll:
+poll_id + user_id must be unique
+
+Anonymous poll:
+poll_id + submission_token is checked before insert
+submission_token is also unique in the responses table
+```
+
+Frontend token behavior:
+
+- The public poll form uses a client-side submission token.
+- The token helps identify that the same browser has already submitted.
+- If the same token is reused, the backend returns `409`.
+
+Analytics behavior:
+
+```txt
+authenticatedResponses = responses with user_id
+anonymousResponses = totalResponses - authenticatedResponses
+```
+
+Current limitation:
+
+- Anonymous duplicate protection is browser-token based.
+- A respondent can bypass it by clearing browser storage, changing browser, using another device, or blocking storage.
+- Stronger production protection can add rate limiting, IP hash checks, user-agent checks, email verification, or CAPTCHA.
+
 ## API Payload Examples
 
 Create poll:
