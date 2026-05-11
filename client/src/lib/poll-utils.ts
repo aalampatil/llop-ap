@@ -21,5 +21,6 @@ export function formatDate(value: string | null) {
 }
 
 export function publicPollUrl(slug: string) {
-  return `${window.location.origin}/p/${slug}`;
+  const appUrl = import.meta.env.VITE_PUBLIC_APP_URL || window.location.origin;
+  return `${appUrl.replace(/\/$/, "")}/p/${slug}`;
 }

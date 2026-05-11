@@ -23,7 +23,7 @@ export function CopyPublicLinkButton({
 
   return (
     <button
-      className={`${variant === "compact" ? "icon-button bg-main" : "neo-button bg-black text-main"} ${className}`.trim()}
+      className={`${variant === "compact" ? "icon-button bg-main text-black" : "neo-button bg-black text-main"} ${className}`.trim()}
       onClick={copyLink}
       style={style}
       title="Copy public link"

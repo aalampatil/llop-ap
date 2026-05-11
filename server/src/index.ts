@@ -26,7 +26,7 @@ async function main() {
 
   app.use(
     cors({
-      origin: env.CLIENT,
+      origin: env.CLIENT || "https://llop-ap.aalampatil.online",
       credentials: true,
     }),
   );
