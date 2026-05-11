@@ -477,7 +477,13 @@ export async function listResponses(req: Request, res: Response) {
       respondentEmail: response.respondentEmail,
       userId: response.userId,
       isAnonymous: !response.userId,
-      answers: answersByResponse.get(response.id) ?? [],
+      answers: loaded.questions
+        .map((question) =>
+          (answersByResponse.get(response.id) ?? []).find(
+            (answer) => answer.questionId === question.id,
+          ),
+        )
+        .filter(Boolean),
     })),
   });
 }

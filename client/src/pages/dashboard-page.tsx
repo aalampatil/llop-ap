@@ -72,6 +72,25 @@ export function DashboardPage() {
     return () => { mounted = false; };
   }, [api, pollId, setActive, setLoading]);
 
+  useEffect(() => {
+    if (!activePoll || !analytics) return;
+    if (responses.length === analytics.totalResponses) return;
+
+    let mounted = true;
+    api
+      .get<{ responses: ResponseDetail[] }>(`/api/poll/${activePoll.id}/responses`)
+      .then((responseData) => {
+        if (mounted) setResponses(responseData.responses);
+      })
+      .catch((err) => {
+        if (mounted) setError(getApiError(err, "Could not refresh responses"));
+      });
+
+    return () => {
+      mounted = false;
+    };
+  }, [activePoll, analytics, api, responses.length]);
+
   const publish = async () => {
     if (!activePoll) return;
     setPublishing(true);
