@@ -1,4 +1,5 @@
 import { Route, Routes } from "react-router-dom";
+import { ProtectedRoute } from "./components/auth/protected-route";
 import { Header } from "./components/layout/header";
 import { BuilderPage } from "./pages/builder-page";
 import { DashboardPage } from "./pages/dashboard-page";
@@ -11,8 +12,22 @@ function App() {
       <Header />
       <Routes>
         <Route element={<HomePage />} path="/" />
-        <Route element={<BuilderPage />} path="/builder" />
-        <Route element={<DashboardPage />} path="/dashboard/:pollId" />
+        <Route
+          element={
+            <ProtectedRoute>
+              <BuilderPage />
+            </ProtectedRoute>
+          }
+          path="/builder"
+        />
+        <Route
+          element={
+            <ProtectedRoute>
+              <DashboardPage />
+            </ProtectedRoute>
+          }
+          path="/dashboard/:pollId"
+        />
         <Route element={<PublicPollPage />} path="/p/:slug" />
       </Routes>
     </div>
