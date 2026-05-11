@@ -21,6 +21,14 @@ export function PollSettingsForm({ form, updateField }: Props) {
           onChange={(event) => updateField("title", event.target.value)}
         />
       </Field>
+      <Field label="Custom URL slug">
+        <input
+          className="neo-input"
+          placeholder="product-feedback-2026"
+          value={form.customSlug}
+          onChange={(event) => updateField("customSlug", event.target.value)}
+        />
+      </Field>
       <Field label="Description">
         <textarea
           className="neo-input min-h-24"

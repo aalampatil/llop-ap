@@ -56,6 +56,21 @@ export type Analytics = {
   questions: AnalyticsQuestion[];
 };
 
+export type ResponseDetail = {
+  id: string;
+  submittedAt: string;
+  respondentName: string | null;
+  respondentEmail: string | null;
+  userId: string | null;
+  isAnonymous: boolean;
+  answers: {
+    questionId: string;
+    question: string;
+    selectedOptionId: string | null;
+    selectedOptionLabel: string;
+  }[];
+};
+
 export type PollSummary = Poll & {
   expired: boolean;
   analytics: Analytics;

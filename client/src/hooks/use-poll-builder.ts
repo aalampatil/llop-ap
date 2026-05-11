@@ -6,6 +6,7 @@ import type { BuilderQuestion, Poll } from "../types/poll";
 
 export type PollBuilderState = {
   title: string;
+  customSlug: string;
   description: string;
   category: string;
   tags: string;
@@ -34,6 +35,7 @@ export function usePollBuilder() {
   const navigate = useNavigate();
   const [form, setForm] = useState<PollBuilderState>({
     title: "Customer Pulse Sprint",
+    customSlug: "",
     description: "Help us choose the next priority.",
     category: "Product",
     tags: "hackathon, launch, feedback",
@@ -125,6 +127,7 @@ export function usePollBuilder() {
     try {
       const data = await api.post<{ poll: Poll }>("/api/poll", {
         title: form.title,
+        customSlug: form.customSlug || undefined,
         description: form.description,
         category: form.category,
         tags: form.tags.split(",").map((tag) => tag.trim()).filter(Boolean),

@@ -1,4 +1,4 @@
-import { Check, Clock, Download, Eye, Link2, Loader2, Lock, QrCode, RefreshCw, Send, ShieldCheck, UserCheck, XCircle } from "lucide-react";
+import { Check, Clock, Download, Eye, Link2, Loader2, Lock, QrCode, RefreshCw, Send, ShieldCheck, UserCheck, Users, XCircle } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { QuestionAnalytics } from "../components/polls/question-analytics";
@@ -7,7 +7,7 @@ import { usePollSocket } from "../hooks/use-poll-socket";
 import { getApiError, useApiClient } from "../lib/api";
 import { formatDate, publicPollUrl } from "../lib/poll-utils";
 import { usePollStore } from "../store/poll-store";
-import type { Analytics, Poll } from "../types/poll";
+import type { Analytics, Poll, ResponseDetail } from "../types/poll";
 
 /* ─────────────────────────────────────────────
    Themed sub-components
@@ -42,6 +42,7 @@ export function DashboardPage() {
   const [publishing, setPublishing] = useState(false);
   const [statusChanging, setStatusChanging] = useState(false);
   const [exporting, setExporting] = useState(false);
+  const [responses, setResponses] = useState<ResponseDetail[]>([]);
   usePollSocket(activePoll?.id);
 
   useEffect(() => {
@@ -52,8 +53,14 @@ export function DashboardPage() {
       setLoading(true);
       setError("");
       try {
-        const data = await api.get<{ poll: Poll; analytics: Analytics }>(`/api/poll/${pollId}/analytics`);
-        if (mounted) setActive(data.poll, data.analytics);
+        const [data, responseData] = await Promise.all([
+          api.get<{ poll: Poll; analytics: Analytics }>(`/api/poll/${pollId}/analytics`),
+          api.get<{ responses: ResponseDetail[] }>(`/api/poll/${pollId}/responses`),
+        ]);
+        if (mounted) {
+          setActive(data.poll, data.analytics);
+          setResponses(responseData.responses);
+        }
       } catch (err) {
         if (mounted) setError(getApiError(err, "Could not load dashboard"));
       } finally {
@@ -113,6 +120,25 @@ export function DashboardPage() {
       setError(getApiError(err, "Could not export responses"));
     } finally {
       setExporting(false);
+    }
+  };
+
+  const downloadQr = async () => {
+    if (!activePoll) return;
+    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=640x640&data=${encodeURIComponent(shareUrl)}`;
+    try {
+      const response = await fetch(qrUrl);
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `${activePoll.slug}-qr.png`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    } catch {
+      window.open(qrUrl, "_blank");
     }
   };
 
@@ -217,6 +243,41 @@ export function DashboardPage() {
             {analytics.questions.map((question) => (
               <QuestionAnalytics key={question.id} question={question} />
             ))}
+            <section className="neo-panel p-5">
+              <div className="mb-4 flex items-center justify-between gap-3">
+                <h2 className="text-3xl font-black">Individual responses</h2>
+                <span className="premium-badge">{responses.length} entries</span>
+              </div>
+              <div className="space-y-3">
+                {responses.length === 0 ? (
+                  <p className="text-sm font-bold text-muted-foreground">No responses yet.</p>
+                ) : (
+                  responses.map((response) => (
+                    <article className="border border-border bg-background p-4" key={response.id}>
+                      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+                        <div className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.08em] text-muted-foreground">
+                          <Users size={13} />
+                          {response.respondentName || response.respondentEmail || (response.isAnonymous ? "Anonymous respondent" : "Signed-in respondent")}
+                        </div>
+                        <time className="text-xs text-muted-foreground">
+                          {formatDate(response.submittedAt)}
+                        </time>
+                      </div>
+                      <div className="grid gap-2">
+                        {response.answers.map((answer) => (
+                          <div className="border-t border-border pt-2" key={`${response.id}-${answer.questionId}`}>
+                            <p className="text-xs font-black uppercase tracking-[0.08em] text-muted-foreground">
+                              {answer.question}
+                            </p>
+                            <p className="font-black">{answer.selectedOptionLabel}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </article>
+                  ))
+                )}
+              </div>
+            </section>
           </section>
 
           {/* Sidebar */}
@@ -233,6 +294,13 @@ export function DashboardPage() {
                 className="mx-auto h-40 w-40"
                 src={`https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(shareUrl)}`}
               />
+              <button
+                className="db-btn db-btn-secondary mt-3 w-full"
+                onClick={downloadQr}
+                type="button"
+              >
+                <Download size={14} /> Download QR
+              </button>
             </div>
             <hr className="db-divider" />
             <DbPreviewRow icon={<Clock size={12} />} label="Expires" value={formatDate(activePoll.expiresAt)} />

@@ -38,6 +38,31 @@ function csvCell(value: unknown) {
   return `"${text.replaceAll('"', '""')}"`;
 }
 
+const anonymousSubmitAttempts = new Map<string, number[]>();
+
+function getClientIp(req: Request) {
+  const forwarded = req.headers["x-forwarded-for"];
+  if (typeof forwarded === "string") return forwarded.split(",")[0]?.trim() || req.ip;
+  return req.ip;
+}
+
+function assertAnonymousRateLimit(req: Request, pollId: string) {
+  const key = `${pollId}:${getClientIp(req)}`;
+  const now = Date.now();
+  const windowMs = 60_000;
+  const maxAttempts = 5;
+  const attempts = (anonymousSubmitAttempts.get(key) ?? []).filter(
+    (timestamp) => now - timestamp < windowMs,
+  );
+
+  if (attempts.length >= maxAttempts) {
+    throw new HttpError(429, "Too many submissions. Please try again in a minute.");
+  }
+
+  attempts.push(now);
+  anonymousSubmitAttempts.set(key, attempts);
+}
+
 const questionInput = z.object({
   question: z.string().trim().min(4).max(500),
   isMandatory: z.boolean().default(true),
@@ -53,6 +78,7 @@ const questionInput = z.object({
 
 const createPollInput = z.object({
   title: z.string().trim().min(4).max(255),
+  customSlug: z.string().trim().min(3).max(120).optional().nullable(),
   description: z.string().trim().max(2000).optional().nullable(),
   category: z.string().trim().min(1).max(120).default("general"),
   tags: z.array(z.string().trim().min(1).max(40)).max(8).default([]),
@@ -113,7 +139,7 @@ export async function createPoll(req: Request, res: Response) {
     return { ...question, options };
   });
 
-  const slug = await makeUniqueSlug(input.title);
+  const slug = await makeUniqueSlug(input.customSlug || input.title);
 
   const poll = await db.transaction(async (tx) => {
     const [createdPoll] = await tx
@@ -385,6 +411,77 @@ export async function exportResponses(req: Request, res: Response) {
   return res.send(csv);
 }
 
+export async function listResponses(req: Request, res: Response) {
+  const user = await requireSessionUser(req);
+  const pollId = stringParam(req.params.id, "Poll id");
+
+  const loaded = await loadPollForOwner(pollId, user.id);
+  if (!loaded) throw new HttpError(404, "Poll not found");
+
+  const responses = await db
+    .select()
+    .from(responsesTable)
+    .where(eq(responsesTable.pollId, pollId))
+    .orderBy(desc(responsesTable.submittedAt));
+
+  const responseIds = responses.map((response) => response.id);
+  const answers =
+    responseIds.length > 0
+      ? await db
+          .select()
+          .from(questionResponsesTable)
+          .where(inArray(questionResponsesTable.responseId, responseIds))
+      : [];
+
+  const questionsById = new Map(
+    loaded.questions.map((question) => [
+      question.id,
+      {
+        question: question.question,
+        options: new Map(
+          parseJson<{ id: string; label: string }[]>(question.options, []).map(
+            (option) => [option.id, option.label],
+          ),
+        ),
+      },
+    ]),
+  );
+
+  const answersByResponse = new Map<string, {
+    questionId: string;
+    question: string;
+    selectedOptionId: string | null;
+    selectedOptionLabel: string;
+  }[]>();
+
+  for (const answer of answers) {
+    const question = questionsById.get(answer.questionId);
+    const row = answersByResponse.get(answer.responseId) ?? [];
+    row.push({
+      questionId: answer.questionId,
+      question: question?.question ?? "Unknown question",
+      selectedOptionId: answer.selectedOptionId,
+      selectedOptionLabel:
+        question?.options.get(answer.selectedOptionId ?? "") ??
+        answer.selectedOptionId ??
+        "",
+    });
+    answersByResponse.set(answer.responseId, row);
+  }
+
+  return res.json({
+    responses: responses.map((response) => ({
+      id: response.id,
+      submittedAt: response.submittedAt,
+      respondentName: response.respondentName,
+      respondentEmail: response.respondentEmail,
+      userId: response.userId,
+      isAnonymous: !response.userId,
+      answers: answersByResponse.get(response.id) ?? [],
+    })),
+  });
+}
+
 export async function getPublicPoll(req: Request, res: Response) {
   const slug = stringParam(req.params.slug, "Poll slug");
 
@@ -424,6 +521,12 @@ export async function submitPoll(req: Request, res: Response) {
   const sessionUser = await getSessionUser(req);
   if (!loaded.poll.isAnonymous && !sessionUser) {
     throw new HttpError(401, "Sign in to answer this poll");
+  }
+  if (loaded.poll.isAnonymous) {
+    assertAnonymousRateLimit(req, loaded.poll.id);
+    if (!input.submissionToken?.startsWith(`${loaded.poll.id}:`)) {
+      throw new HttpError(400, "Submission token is required");
+    }
   }
 
   const requiredQuestionIds = loaded.questions

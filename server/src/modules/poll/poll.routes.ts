@@ -6,6 +6,7 @@ import {
   closePoll,
   duplicatePoll,
   exportResponses,
+  listResponses,
   getOwnedPoll,
   getPublicPoll,
   listPolls,
@@ -21,6 +22,7 @@ pollRouter.post("/", asyncHandler(createPoll));
 pollRouter.get("/public/:slug", asyncHandler(getPublicPoll));
 pollRouter.post("/public/:slug/submit", asyncHandler(submitPoll));
 pollRouter.get("/:id/export.csv", asyncHandler(exportResponses));
+pollRouter.get("/:id/responses", asyncHandler(listResponses));
 pollRouter.post("/:id/close", asyncHandler(closePoll));
 pollRouter.post("/:id/reopen", asyncHandler(reopenPoll));
 pollRouter.post("/:id/duplicate", asyncHandler(duplicatePoll));
