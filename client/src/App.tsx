@@ -4,7 +4,6 @@ import { BuilderPage } from "./pages/builder-page";
 import { DashboardPage } from "./pages/dashboard-page";
 import { HomePage } from "./pages/home-page";
 import { PublicPollPage } from "./pages/public-poll-page";
-import "./App.css";
 
 function App() {
   return (

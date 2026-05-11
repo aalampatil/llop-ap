@@ -1,12 +1,17 @@
 import { Check, Copy } from "lucide-react";
 import { useState } from "react";
+import type { CSSProperties } from "react";
 
 export function CopyPublicLinkButton({
   url,
   variant = "default",
+  className = "",
+  style,
 }: {
   url: string;
   variant?: "default" | "compact";
+  className?: string;
+  style?: CSSProperties;
 }) {
   const [copied, setCopied] = useState(false);
 
@@ -18,8 +23,9 @@ export function CopyPublicLinkButton({
 
   return (
     <button
-      className={variant === "compact" ? "icon-button bg-main" : "neo-button bg-white"}
+      className={`${variant === "compact" ? "icon-button bg-main" : "neo-button bg-black text-main"} ${className}`.trim()}
       onClick={copyLink}
+      style={style}
       title="Copy public link"
       type="button"
     >

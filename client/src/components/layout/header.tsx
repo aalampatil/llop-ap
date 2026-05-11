@@ -10,12 +10,12 @@ export function Header() {
     <header className="premium-header sticky top-0 z-40">
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3.5">
         <button className="flex items-center gap-3 text-left" onClick={() => navigate("/")} type="button">
-          <span className="brand-mark size-11 rounded-2xl">
-            <Vote className="size-6 text-black" />
+          <span className="brand-mark size-11">
+            <Vote className="size-6" />
           </span>
           <span>
             <span className="block text-xl font-black leading-none tracking-tight">LLOP</span>
-            <span className="block text-xs font-black uppercase tracking-[0.16em] text-white/48">
+            <span className="block text-xs font-black uppercase tracking-[0.16em] text-muted-foreground">
               live polling
             </span>
           </span>
@@ -50,7 +50,7 @@ export function Header() {
           </SignedOutView>
           <SignedInView>
             <button
-              className="neo-button hidden bg-white sm:inline-flex"
+              className="neo-button hidden bg-main sm:inline-flex"
               onClick={() => navigate("/builder")}
               type="button"
             >

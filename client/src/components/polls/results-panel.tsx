@@ -14,7 +14,7 @@ export function ResultsPanel({
     <section className="space-y-5">
       <div>
         <h2 className="text-4xl font-black">{title}</h2>
-        <p className="mt-1 font-bold text-black/60">
+        <p className="mt-1 text-sm font-bold uppercase tracking-[0.08em] text-muted-foreground">
           {analytics.totalResponses} total responses
         </p>
       </div>

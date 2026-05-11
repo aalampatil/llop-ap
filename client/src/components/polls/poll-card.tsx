@@ -11,7 +11,7 @@ export function PollCard({ poll }: { poll: PollSummary }) {
   const shareUrl = publicPollUrl(poll.slug);
 
   return (
-    <article className="neo-panel group bg-white/70 p-5 transition duration-200 hover:-translate-y-1 hover:shadow-[0_24px_58px_rgba(17,19,22,0.14)]">
+    <article className="neo-panel group p-5 transition duration-200 hover:-translate-y-1">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <div className="mb-2 flex flex-wrap gap-2">
@@ -20,7 +20,7 @@ export function PollCard({ poll }: { poll: PollSummary }) {
             {poll.expired ? <Badge>expired</Badge> : null}
           </div>
           <h3 className="text-2xl font-black tracking-tight">{poll.title}</h3>
-          <p className="mt-1 line-clamp-2 font-semibold leading-6 text-black/55">
+          <p className="mt-1 line-clamp-2 font-semibold leading-6 text-muted-foreground">
             {poll.description || "No description"}
           </p>
         </div>
@@ -45,7 +45,7 @@ export function PollCard({ poll }: { poll: PollSummary }) {
       </div>
       <div className="mt-5 flex flex-wrap gap-3">
         <button
-          className="neo-button bg-black text-white"
+          className="neo-button bg-black"
           onClick={() => navigate(`/dashboard/${poll.id}`)}
           type="button"
         >

@@ -3,9 +3,9 @@ import { Lock } from "lucide-react";
 
 export function AuthRequiredPanel() {
   return (
-    <div className="neo-panel bg-white/72 p-6">
+    <div className="neo-panel p-6">
       <h2 className="text-3xl font-black tracking-tight">Sign in required</h2>
-      <p className="mt-2 font-semibold leading-7 text-black/56">
+      <p className="mt-2 font-semibold leading-7 text-muted-foreground">
         The creator requires authenticated responses for this poll.
       </p>
       <SignInButton mode="modal">

@@ -26,7 +26,7 @@ export function QuestionCard({
   removeOption,
 }: Props) {
   return (
-    <div className="neo-panel bg-white/72 p-5">
+    <div className="neo-panel p-5">
       <div className="mb-4 flex items-center justify-between gap-3">
         <Badge>Question {questionIndex + 1}</Badge>
         <div className="flex items-center gap-2">
@@ -39,7 +39,7 @@ export function QuestionCard({
           />
           {canRemove ? (
             <button
-              className="icon-button bg-white"
+              className="icon-button"
               onClick={() => removeQuestion(question.id)}
               title="Remove question"
               type="button"
@@ -59,7 +59,7 @@ export function QuestionCard({
       <div className="mt-4 space-y-3">
         {question.options.map((option, optionIndex) => (
           <div className="flex gap-2" key={option.id}>
-            <span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-main font-black shadow-[0_12px_24px_rgba(102,180,35,0.18)] ring-1 ring-black/10">
+            <span className="grid size-12 shrink-0 place-items-center border border-main bg-main text-main-foreground font-black">
               {optionIndex + 1}
             </span>
             <input
@@ -69,7 +69,7 @@ export function QuestionCard({
               onChange={(event) => updateOption(question.id, option.id, event.target.value)}
             />
             <button
-              className="icon-button bg-white"
+              className="icon-button"
               onClick={() => removeOption(question.id, option.id)}
               title="Remove option"
               type="button"
@@ -79,7 +79,7 @@ export function QuestionCard({
           </div>
         ))}
       </div>
-      <button className="neo-button mt-4 bg-white" onClick={() => addOption(question.id)} type="button">
+      <button className="neo-button mt-4 bg-main" onClick={() => addOption(question.id)} type="button">
         <Plus className="size-4" /> Add option
       </button>
     </div>

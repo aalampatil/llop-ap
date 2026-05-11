@@ -36,7 +36,7 @@ export function ResponseForm({
   return (
     <section className="space-y-5">
       {poll.isAnonymous ? (
-        <div className="neo-panel grid gap-4 bg-white/72 p-5 md:grid-cols-2">
+        <div className="neo-panel grid gap-4 p-5 md:grid-cols-2">
           <Field label="Name">
             <input
               className="neo-input"
@@ -57,10 +57,10 @@ export function ResponseForm({
       ) : null}
 
       {poll.questions.map((question, index) => (
-        <div className="neo-panel bg-white/72 p-5" key={question.id}>
+        <div className="neo-panel p-5" key={question.id}>
           <div className="mb-4 flex items-center justify-between gap-3">
             <Badge>Question {index + 1}</Badge>
-            <span className="font-black text-black/60">
+            <span className="text-xs font-black uppercase tracking-[0.1em] text-muted-foreground">
               {question.isMandatory ? "Required" : "Optional"}
             </span>
           </div>
@@ -93,12 +93,12 @@ export function ResponseForm({
       </button>
 
       {error ? (
-        <div className="rounded-2xl border border-red-200 bg-red-50 p-4 font-black text-red-700 shadow-[0_12px_28px_rgba(220,38,38,0.1)]">
+        <div className="border border-red-500/40 bg-red-950/40 p-4 font-black text-red-300">
           {error}
         </div>
       ) : null}
       {message ? (
-        <div className="rounded-2xl bg-main p-4 font-black shadow-[0_16px_34px_rgba(102,180,35,0.18)] ring-1 ring-black/10">
+        <div className="border border-main bg-main/20 p-4 font-black text-main">
           {message}
         </div>
       ) : null}

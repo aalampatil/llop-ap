@@ -13,7 +13,7 @@ type Props = {
 
 export function PollSettingsForm({ form, updateField }: Props) {
   return (
-    <div className="neo-panel grid gap-4 bg-white/72 p-5">
+    <div className="neo-panel grid gap-4 p-5">
       <Field label="Title">
         <input
           className="neo-input"
@@ -55,7 +55,7 @@ export function PollSettingsForm({ form, updateField }: Props) {
       <div className="grid gap-4 md:grid-cols-3">
         <Field label="Expiry">
           <input
-            className="neo-input"
+            className="neo-input bg-main text-black"
             type="datetime-local"
             value={form.expiresAt}
             onChange={(event) => updateField("expiresAt", event.target.value)}

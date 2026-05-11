@@ -11,7 +11,7 @@ export function PollStatusPanel({
   analytics: Analytics | null;
 }) {
   return (
-    <aside className="premium-analytics-card h-fit p-5 text-white">
+    <aside className="premium-analytics-card h-fit p-5">
       <h2 className="text-2xl font-black tracking-tight">Poll status</h2>
       <div className="mt-5 space-y-3">
         <PreviewRow icon={<Clock />} label="Expires" value={formatDate(poll.expiresAt)} />

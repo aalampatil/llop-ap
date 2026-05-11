@@ -12,8 +12,8 @@ export function Metric({
   return (
     <div className="premium-metric p-4">
       <div className="relative z-10 mb-3 flex items-center justify-between">
-        <span className="font-black text-black/58">{label}</span>
-        <span className="grid size-9 place-items-center rounded-full bg-black text-white [&_svg]:size-4">
+        <span className="text-xs font-black uppercase tracking-[0.1em] text-muted-foreground">{label}</span>
+        <span className="grid size-9 place-items-center border border-main bg-main text-main-foreground [&_svg]:size-4">
           {icon}
         </span>
       </div>
