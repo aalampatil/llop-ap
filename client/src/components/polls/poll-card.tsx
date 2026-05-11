@@ -61,14 +61,14 @@ export function PollCard({ poll }: { poll: PollSummary }) {
       </div>
       <div className="mt-5 flex flex-wrap gap-3">
         <button
-          className="neo-button bg-black"
+          className="neo-button bg-secondary text-foreground"
           onClick={() => navigate(`/dashboard/${poll.id}`)}
           type="button"
         >
           <BarChart3 className="size-4" /> Analytics
         </button>
         <button
-          className="neo-button bg-white"
+          className="neo-button bg-black text-main"
           onClick={() => window.open(shareUrl, "_blank")}
           type="button"
         >

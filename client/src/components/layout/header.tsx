@@ -1,10 +1,12 @@
 import { SignInButton, SignUpButton, UserButton } from "@clerk/react";
-import { Plus, Vote, Zap } from "lucide-react";
+import { Moon, Plus, Sun, Vote, Zap } from "lucide-react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { SignedInView, SignedOutView } from "../auth/auth-views";
+import { useTheme } from "../../hooks/use-theme";
 
 export function Header() {
   const navigate = useNavigate();
+  const { isDark, toggleTheme } = useTheme();
 
   return (
     <header className="premium-header sticky top-0 z-40">
@@ -36,6 +38,15 @@ export function Header() {
           </button>
         </nav>
         <div className="flex items-center gap-2">
+          <button
+            aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
+            className="icon-button"
+            onClick={toggleTheme}
+            title={isDark ? "Switch to light mode" : "Switch to dark mode"}
+            type="button"
+          >
+            {isDark ? <Sun className="size-4" /> : <Moon className="size-4" />}
+          </button>
           <SignedOutView>
             <SignInButton mode="modal">
               <button className="neo-button bg-white" type="button">
