@@ -3,6 +3,7 @@ import { clerkClient, getAuth } from "@clerk/express";
 import { eq } from "drizzle-orm";
 import { db } from "../db";
 import { usersTable } from "../db/schema";
+import { env } from "../env";
 
 export class HttpError extends Error {
   constructor(
@@ -21,6 +22,18 @@ export function asyncHandler(
   };
 }
 
+function getAdminEmails() {
+  return new Set(
+    env.ADMIN_EMAILS.split(",")
+      .map((email) => email.trim().toLowerCase())
+      .filter(Boolean),
+  );
+}
+
+function isAdminEmail(email: string) {
+  return getAdminEmails().has(email.toLowerCase());
+}
+
 export async function getSessionUser(req: Request) {
   const { userId } = getAuth(req);
   if (!userId) return null;
@@ -31,7 +44,18 @@ export async function getSessionUser(req: Request) {
     .where(eq(usersTable.clerkUserId, userId))
     .limit(1);
 
-  if (existing) return existing;
+  if (existing) {
+    if (existing.role !== "admin" && isAdminEmail(existing.email)) {
+      const [updated] = await db
+        .update(usersTable)
+        .set({ role: "admin", updatedAt: new Date() })
+        .where(eq(usersTable.id, existing.id))
+        .returning();
+      return updated ?? existing;
+    }
+
+    return existing;
+  }
 
   const clerkUser = await clerkClient.users.getUser(userId);
   const primaryEmail =
@@ -52,6 +76,7 @@ export async function getSessionUser(req: Request) {
       clerkUserId: userId,
       name: fullName,
       email: primaryEmail,
+      role: isAdminEmail(primaryEmail) ? "admin" : "creator",
     })
     .returning();
 
@@ -61,6 +86,12 @@ export async function getSessionUser(req: Request) {
 export async function requireSessionUser(req: Request) {
   const user = await getSessionUser(req);
   if (!user) throw new HttpError(401, "Authentication required");
+  return user;
+}
+
+export async function requireAdminUser(req: Request) {
+  const user = await requireSessionUser(req);
+  if (user.role !== "admin") throw new HttpError(403, "Admin access required");
   return user;
 }
 

@@ -30,10 +30,11 @@ export const questionTypeEnum = pgEnum("question_type", [
 
 export const usersTable = pgTable("users", {
   id: uuid("id").defaultRandom().primaryKey(),
-  clerkUserId: varchar("clerk_user_id", { length: 255 }).notNull().unique(),
-  name: varchar("name", { length: 255 }).notNull(),
-  email: varchar("email", { length: 255 }).notNull().unique(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
+    clerkUserId: varchar("clerk_user_id", { length: 255 }).notNull().unique(),
+    name: varchar("name", { length: 255 }).notNull(),
+    email: varchar("email", { length: 255 }).notNull().unique(),
+    role: varchar("role", { length: 40 }).default("creator").notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at")
     .defaultNow()
     .notNull()

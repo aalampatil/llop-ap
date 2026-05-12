@@ -91,3 +91,53 @@ export type PublicState = {
 };
 
 export type IconNode = ReactNode;
+
+export type CurrentUser = {
+  id: string;
+  clerkUserId: string;
+  name: string;
+  email: string;
+  role: "admin" | "creator" | string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type AdminOverview = {
+  stats: {
+    totalUsers: number;
+    totalPolls: number;
+    activePolls: number;
+    publishedPolls: number;
+    totalResponses: number;
+    anonymousResponses: number;
+  };
+  users: {
+    id: string;
+    name: string;
+    email: string;
+    role: string;
+    createdAt: string;
+    pollCount: number;
+    responseCount: number;
+  }[];
+  polls: {
+    id: string;
+    slug: string;
+    title: string;
+    category: string;
+    tags: string[];
+    status: Poll["status"];
+    isAnonymous: boolean;
+    showLiveResults: boolean;
+    expiresAt: string | null;
+    publishedAt: string | null;
+    createdAt: string;
+    updatedAt: string;
+    responseCount: number;
+    owner: {
+      id: string;
+      name: string;
+      email: string;
+    } | null;
+  }[];
+};

@@ -5,6 +5,7 @@ import { Server } from "socket.io";
 import { clerkMiddleware } from "@clerk/express";
 import { userRouter } from "./modules/user/user.routes";
 import { pollRouter } from "./modules/poll/poll.routes";
+import { adminRouter } from "./modules/admin/admin.routes";
 import { registerSocketHandlers } from "./socket";
 import { env } from "./env";
 import { initIO } from "./lib/socket";
@@ -44,6 +45,7 @@ async function main() {
 
   app.use("/api/user", userRouter);
   app.use("/api/poll", pollRouter);
+  app.use("/api/admin", adminRouter);
   app.use(errorHandler);
   const stopPollExpiryJob = startPollExpiryJob();
 

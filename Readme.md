@@ -148,6 +148,7 @@ CLIENT=http://localhost:5173
 DATABASE_URL=postgres://ADMIN:ADMIN@localhost:5432/llop_ap
 CLERK_PUBLISHABLE_KEY=pk_test_your_clerk_publishable_key
 CLERK_SECRET_KEY=sk_test_your_clerk_secret_key
+ADMIN_EMAILS=admin1@example.com,admin2@example.com
 ```
 
 Server variables:
@@ -157,6 +158,7 @@ Server variables:
 - `DATABASE_URL` - PostgreSQL connection string used by Drizzle.
 - `CLERK_PUBLISHABLE_KEY` - Clerk public key.
 - `CLERK_SECRET_KEY` - Clerk secret key used by the backend middleware.
+- `ADMIN_EMAILS` - Comma-separated allowlist of emails that should be treated as platform admins.
 
 ## Docker
 
@@ -285,6 +287,7 @@ Frontend routes:
 - `/` - Creator workspace and poll list.
 - `/builder` - Poll builder.
 - `/dashboard/:pollId` - Creator analytics dashboard.
+- `/admin` - Platform admin panel (admin role required).
 - `/p/:slug` - Public poll response page.
 
 Backend routes:
@@ -299,6 +302,8 @@ Backend routes:
 - `POST /api/poll/:id/publish` - Publish final results.
 - `GET /api/poll/public/:slug` - Get a public poll by slug.
 - `POST /api/poll/public/:slug/submit` - Submit a public poll response.
+- `GET /api/admin/overview` - Admin overview (users + polls + stats).
+- `POST /api/admin/polls/:id/close` - Admin close poll (cannot close published polls).
 
 ## Socket Events
 

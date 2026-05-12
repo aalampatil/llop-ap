@@ -3,10 +3,12 @@ import { Moon, Plus, Sun, Vote, Zap } from "lucide-react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { SignedInView, SignedOutView } from "../auth/auth-views";
 import { useTheme } from "../../hooks/use-theme";
+import { useCurrentUser } from "../../hooks/use-current-user";
 
 export function Header() {
   const navigate = useNavigate();
   const { isDark, toggleTheme } = useTheme();
+  const { isAdmin } = useCurrentUser();
 
   return (
     <header className="premium-header sticky top-0 z-40">
@@ -29,6 +31,11 @@ export function Header() {
           <NavLink className={({ isActive }) => `top-nav-pill ${isActive ? "is-active" : ""}`} to="/builder">
             Builder
           </NavLink>
+          {isAdmin ? (
+            <NavLink className={({ isActive }) => `top-nav-pill ${isActive ? "is-active" : ""}`} to="/admin">
+              Admin
+            </NavLink>
+          ) : null}
           <button className="top-nav-pill" onClick={() => navigate("/#workspace")} type="button">
             Workspace
           </button>

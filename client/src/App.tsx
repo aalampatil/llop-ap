@@ -1,6 +1,8 @@
 import { Route, Routes } from "react-router-dom";
+import { AdminRoute } from "./components/auth/admin-route";
 import { ProtectedRoute } from "./components/auth/protected-route";
 import { Header } from "./components/layout/header";
+import { AdminPage } from "./pages/admin-page";
 import { BuilderPage } from "./pages/builder-page";
 import { DashboardPage } from "./pages/dashboard-page";
 import { HomePage } from "./pages/home-page";
@@ -27,6 +29,14 @@ function App() {
             </ProtectedRoute>
           }
           path="/dashboard/:pollId"
+        />
+        <Route
+          element={
+            <AdminRoute>
+              <AdminPage />
+            </AdminRoute>
+          }
+          path="/admin"
         />
         <Route element={<PublicPollPage />} path="/p/:slug" />
       </Routes>
