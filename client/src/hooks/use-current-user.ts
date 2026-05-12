@@ -3,9 +3,13 @@ import { useEffect, useState } from "react";
 import { getApiError, useApiClient } from "../lib/api";
 import type { CurrentUser } from "../types/poll";
 
+let cachedCurrentUser: CurrentUser | null | undefined;
+let cachedUserId: string | null = null;
+let currentUserRequest: Promise<CurrentUser | null> | null = null;
+
 export function useCurrentUser() {
   const api = useApiClient();
-  const { isLoaded, isSignedIn } = useAuth();
+  const { isLoaded, isSignedIn, userId } = useAuth();
   const [user, setUser] = useState<CurrentUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -16,6 +20,9 @@ export function useCurrentUser() {
     async function load() {
       if (!isLoaded) return;
       if (!isSignedIn) {
+        cachedCurrentUser = undefined;
+        cachedUserId = null;
+        currentUserRequest = null;
         setUser(null);
         setLoading(false);
         return;
@@ -24,8 +31,20 @@ export function useCurrentUser() {
       setLoading(true);
       setError("");
       try {
-        const data = await api.get<{ user: CurrentUser | null }>("/api/user/me");
-        if (mounted) setUser(data.user);
+        const currentUser =
+          cachedCurrentUser !== undefined && cachedUserId === userId
+            ? cachedCurrentUser
+            : await (currentUserRequest ??= api
+                .get<{ user: CurrentUser | null }>("/api/user/me")
+                .then((data) => {
+                  cachedCurrentUser = data.user;
+                  cachedUserId = userId;
+                  return data.user;
+                })
+                .finally(() => {
+                  currentUserRequest = null;
+                }));
+        if (mounted) setUser(currentUser);
       } catch (err) {
         if (mounted) setError(getApiError(err, "Could not load user"));
       } finally {
@@ -37,7 +56,7 @@ export function useCurrentUser() {
     return () => {
       mounted = false;
     };
-  }, [api, isLoaded, isSignedIn]);
+  }, [api, isLoaded, isSignedIn, userId]);
 
   return {
     user,

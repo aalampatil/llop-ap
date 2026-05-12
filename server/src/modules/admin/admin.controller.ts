@@ -1,5 +1,5 @@
 import type { Request, Response } from "express";
-import { and, desc, eq, ne } from "drizzle-orm";
+import { and, desc, eq, ne, sql } from "drizzle-orm";
 import { db } from "../../db";
 import { pollsTable, responsesTable, usersTable } from "../../db/schema";
 import { HttpError, requireAdminUser } from "../../lib/http";
@@ -15,20 +15,53 @@ function stringParam(value: string | string[] | undefined, name: string) {
 export async function getAdminOverview(req: Request, res: Response) {
   await requireAdminUser(req);
 
-  const [users, polls, responses] = await Promise.all([
+  const [
+    users,
+    polls,
+    responseCountsByPoll,
+    responseCountsByUser,
+    [responseTotals],
+  ] = await Promise.all([
     db.select().from(usersTable).orderBy(desc(usersTable.createdAt)),
     db.select().from(pollsTable).orderBy(desc(pollsTable.updatedAt)),
-    db.select().from(responsesTable).orderBy(desc(responsesTable.submittedAt)),
+    db
+      .select({
+        pollId: responsesTable.pollId,
+        count: sql<number>`count(*)::int`,
+      })
+      .from(responsesTable)
+      .groupBy(responsesTable.pollId),
+    db
+      .select({
+        userId: responsesTable.userId,
+        count: sql<number>`count(*)::int`,
+      })
+      .from(responsesTable)
+      .where(sql`${responsesTable.userId} is not null`)
+      .groupBy(responsesTable.userId),
+    db
+      .select({
+        totalResponses: sql<number>`count(*)::int`,
+        anonymousResponses: sql<number>`count(*) filter (where ${responsesTable.userId} is null)::int`,
+      })
+      .from(responsesTable),
   ]);
 
-  const responsesByPoll = responses.reduce<Record<string, number>>((counts, response) => {
-    counts[response.pollId] = (counts[response.pollId] ?? 0) + 1;
+  const responsesByPoll = new Map(
+    responseCountsByPoll.map((row) => [row.pollId, row.count]),
+  );
+  const responsesByUser = new Map(
+    responseCountsByUser
+      .filter((row) => row.userId)
+      .map((row) => [row.userId as string, row.count]),
+  );
+  const pollsByUser = polls.reduce<Map<string, number>>((counts, poll) => {
+    counts.set(poll.createdBy, (counts.get(poll.createdBy) ?? 0) + 1);
     return counts;
-  }, {});
+  }, new Map());
   const usersById = new Map(users.map((user) => [user.id, user]));
   const activePolls = polls.filter((poll) => poll.status === "active").length;
   const publishedPolls = polls.filter((poll) => poll.status === "published").length;
-  const anonymousResponses = responses.filter((response) => !response.userId).length;
 
   return res.json({
     stats: {
@@ -36,8 +69,8 @@ export async function getAdminOverview(req: Request, res: Response) {
       totalPolls: polls.length,
       activePolls,
       publishedPolls,
-      totalResponses: responses.length,
-      anonymousResponses,
+      totalResponses: responseTotals?.totalResponses ?? 0,
+      anonymousResponses: responseTotals?.anonymousResponses ?? 0,
     },
     users: users.map((user) => ({
       id: user.id,
@@ -45,8 +78,8 @@ export async function getAdminOverview(req: Request, res: Response) {
       email: user.email,
       role: user.role,
       createdAt: user.createdAt,
-      pollCount: polls.filter((poll) => poll.createdBy === user.id).length,
-      responseCount: responses.filter((response) => response.userId === user.id).length,
+      pollCount: pollsByUser.get(user.id) ?? 0,
+      responseCount: responsesByUser.get(user.id) ?? 0,
     })),
     polls: polls.map((poll) => {
       const owner = usersById.get(poll.createdBy);
@@ -63,7 +96,7 @@ export async function getAdminOverview(req: Request, res: Response) {
         publishedAt: poll.publishedAt,
         createdAt: poll.createdAt,
         updatedAt: poll.updatedAt,
-        responseCount: responsesByPoll[poll.id] ?? 0,
+        responseCount: responsesByPoll.get(poll.id) ?? 0,
         owner: owner
           ? {
               id: owner.id,
